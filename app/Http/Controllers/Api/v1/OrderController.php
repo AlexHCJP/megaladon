@@ -69,7 +69,7 @@ class OrderController extends ApiController
     public function rate(RateOrderRequest $request, $id)
     {
         $data = $request->validated();
-        return $this->result($this->orderService->rateExecutor($id, $data['rate']));
+        return $this->result($this->orderService->rateExecutor($id, $data));
     }
 
     public function createChat($id, CreateOrderChatRequest $request)

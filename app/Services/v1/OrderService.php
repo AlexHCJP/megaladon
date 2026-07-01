@@ -283,13 +283,13 @@ class OrderService extends BaseService
         return $this->ok();
     }
 
-    public function rateExecutor(int $orderId, float $rate)
+    public function rateExecutor(int $orderId, array $data)
     {
         $order = Order::find($orderId);
         if (is_null($order)) {
             return $this->errNotFound(__('order.not_found'));
         }
-        
+
         $user = $this->apiAuthUser();
         if (is_null($user)) {
             return $this->errFobidden(__('order.unauthorized'));
@@ -298,7 +298,7 @@ class OrderService extends BaseService
         if ($order->user_id != $user->id) {
             return $this->error(406, __('order.cannot_rate_foreign'));
         }
-        
+
         if ($order->status != Order::STATUS_COMPLETED) {
             return $this->error(406, __('order.cannot_rate_yet'));
         }
@@ -308,10 +308,20 @@ class OrderService extends BaseService
             return $this->errNotFound(__('order.executor_not_found'));
         }
 
-        $executor->ratings()->create([
+        $rating = $executor->ratings()->create([
             'user_id' => $user->id,
-            'rate' => $rate,
+            'rate' => $data['rate'],
+            'comment' => $data['comment'] ?? null,
         ]);
+
+        if (isset($data['images'])) {
+            foreach ($data['images'] as $image) {
+                $path = $image->store('public/rating');
+                $rating->media()->create([
+                    'storage_link' => Storage::url($path),
+                ]);
+            }
+        }
 
         event(new ExecutorRatedEvent($executor));
 

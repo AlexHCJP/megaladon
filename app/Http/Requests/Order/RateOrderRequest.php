@@ -25,6 +25,9 @@ class RateOrderRequest extends FormRequest
     {
         return [
             'rate' => ['required', 'numeric', 'min:1.0', 'max:5.0'],
+            'comment' => ['nullable', 'string', 'max:1000'],
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*' => ['image'],
         ];
     }
 }
