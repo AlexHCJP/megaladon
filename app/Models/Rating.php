@@ -12,10 +12,16 @@ class Rating extends Model
     protected $fillable = [
         'user_id',
         'rate',
+        'comment',
     ];
 
     public function ratingable()
     {
         return $this->morphTo('ratingable');
+    }
+
+    public function media()
+    {
+        return $this->morphMany(MediaFiles::class, 'mediable');
     }
 }
