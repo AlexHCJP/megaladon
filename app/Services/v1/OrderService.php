@@ -33,7 +33,7 @@ class OrderService extends BaseService
     {
         $data['user_id'] = $user->id;
         $data['executor_id'] = 0;
-        $data['status'] = Order::STATUS_ACTIVE;
+        $data['status'] = Order::STATUS_MODERATE;
         $order = $this->orderRepo->store($data);
 
         if (isset($data['files'])) {
