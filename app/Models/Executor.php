@@ -12,8 +12,7 @@ class Executor extends Model
     use HasFactory, CrudTrait;
 
     protected $fillable = [
-        'user_id', 
-        'city_id',
+        'user_id',
         'name',
         'description',
         'bin',
@@ -41,11 +40,6 @@ class Executor extends Model
     public function invoices()
     {
         return $this->morphMany(Invoice::class, 'invoiceable');
-    }
-
-    public function city()
-    {
-        return $this->belongsTo(City::class, 'city_id');
     }
 
     public function activeInvoice()

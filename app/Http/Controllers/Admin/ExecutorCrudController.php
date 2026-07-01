@@ -40,14 +40,6 @@ class ExecutorCrudController extends CrudController
     protected function setupListOperation()
     {
         CRUD::column('user.name')->label('Пользователь');
-        CRUD::addColumn([
-            'label'     => 'Город', // Table column heading
-            'type'      => 'select',
-            'name'      => 'city_id', // the column that contains the ID of that connected entity;
-            'entity'    => 'city', // the method that defines the relationship in your Model
-            'attribute' => 'name', // foreign key attribute that is shown to user
-            'model'     => "App\Models\City", // foreign key model
-        ]);
         CRUD::column('name')->label('Имя');
         CRUD::column('description')->label('Описание')->limit(20);
         CRUD::column('bin')->label('БИН');
@@ -80,14 +72,6 @@ class ExecutorCrudController extends CrudController
             'entity'    => 'user', // the method that defines the relationship in your Model
             'attribute' => 'name', // foreign key attribute that is shown to user
             'model'     => "App\Models\User",
-        ]);
-        CRUD::addField([
-            'label'     => 'Город', // Table column heading
-            'type'      => 'select',
-            'name'      => 'city_id', // the column that contains the ID of that connected entity;
-            'entity'    => 'city', // the method that defines the relationship in your Model
-            'attribute' => 'name', // foreign key attribute that is shown to user
-            'model'     => "App\Models\City", // foreign key model
         ]);
         CRUD::field('name')->label('Имя');
         CRUD::addField([
@@ -131,14 +115,6 @@ class ExecutorCrudController extends CrudController
     protected function autoSetupShowOperation()
     {
         CRUD::column('user.name')->label('Пользователь');
-        CRUD::addColumn([
-            'label'     => 'Город', // Table column heading
-            'type'      => 'select',
-            'name'      => 'city_id', // the column that contains the ID of that connected entity;
-            'entity'    => 'city', // the method that defines the relationship in your Model
-            'attribute' => 'name', // foreign key attribute that is shown to user
-            'model'     => "App\Models\City", // foreign key model
-        ]);
         CRUD::column('name')->label('Имя');
         CRUD::column('bin')->label('БИН');
         CRUD::addColumn([

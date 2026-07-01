@@ -8,7 +8,7 @@ class FavoriteRepo
 {
     public function indexMy(int $userId)
     {
-        return Favorite::with('executor', 'order', 'executor.city')
+        return Favorite::with('executor', 'order')
             ->where('user_id', $userId)
             ->get();
     }

@@ -19,7 +19,7 @@ class ExecutorRepo
 
     public function info(int $user_id)
     {
-        return Executor::with(['services', 'city'])
+        return Executor::with(['services'])
             ->where('user_id', $user_id)
             ->first();
     }
