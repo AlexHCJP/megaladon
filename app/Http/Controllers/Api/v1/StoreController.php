@@ -64,6 +64,11 @@ class StoreController extends ApiController
     public function rate(RateStoreRequest $request, $id)
     {
         $data = $request->validated();
-        return $this->result($this->storeService->rateStore($id, $data['rate']));
+        return $this->result($this->storeService->rateStore($id, $data));
+    }
+
+    public function ratings($id)
+    {
+        return $this->result($this->storeService->ratings($id));
     }
 }

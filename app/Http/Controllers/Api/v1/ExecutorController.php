@@ -32,4 +32,9 @@ class ExecutorController extends ApiController
         $data = $request->validated();
         return $this->result($this->executorService->addToFavorites($data));
     }
+
+    public function myRatings()
+    {
+        return $this->result($this->executorService->myRatings());
+    }
 }

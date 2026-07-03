@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Presenters\v1\ExecutorPresenter;
 use App\Presenters\v1\FavoritePresenter;
+use App\Presenters\v1\RatingPresenter;
 use App\Repositories\ExecutorRepo;
 use App\Repositories\FavoriteRepo;
 use App\Services\BaseService;
@@ -64,6 +65,23 @@ class ExecutorService extends BaseService
         $favorites = (new FavoriteRepo())->indexMy($user->id);
 
         return $this->resultCollections($favorites, FavoritePresenter::class, 'list');
+    }
+
+    public function myRatings()
+    {
+        $user = $this->apiAuthUser();
+        if (is_null($user)) {
+            return $this->errFobidden(__('executor.auth_error'));
+        }
+
+        $executor = $this->executorRepo->findByUserId($user->id);
+        if (is_null($executor)) {
+            return $this->errFobidden(__('executor.not_registered'));
+        }
+
+        $ratings = $executor->ratings()->with(['media', 'user'])->latest()->get();
+
+        return $this->resultCollections($ratings, RatingPresenter::class, 'list');
     }
 
     public function addToFavorites(array $data)

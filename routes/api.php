@@ -111,6 +111,7 @@ Route::group(['guard' => 'api'], function () {
     Route::group(['prefix' => 'store', 'middleware' => 'api'], function() {
         Route::get('/', [StoreController::class, 'index']);
         Route::get('/{id}', [StoreController::class, 'info']);
+        Route::get('/{id}/ratings', [StoreController::class, 'ratings']);
         Route::post('/{id}/rate', [StoreController::class, 'rate']);
         Route::put('/update', [StoreController::class, 'updateProfile']);
         Route::post('/price', [StoreController::class, 'uploadPrice']);
@@ -122,6 +123,7 @@ Route::group(['guard' => 'api'], function () {
     Route::group(['prefix' => 'executor', 'middleware' => 'api'], function () {
         Route::get('/favorite', [ExecutorController::class, 'indexMy']);
         Route::post('/favorite', [ExecutorController::class, 'addToFavorites']);
+        Route::get('/my/ratings', [ExecutorController::class, 'myRatings']);
     });
 
     Route::group(['prefix' => 'chat', 'middleware' => 'api'], function () {

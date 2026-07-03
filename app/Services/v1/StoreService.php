@@ -6,6 +6,7 @@ use App\Events\StoreRatedEvent;
 use App\Models\Store;
 use App\Models\User;
 use App\Presenters\v1\CompanyTypePresenter;
+use App\Presenters\v1\RatingPresenter;
 use App\Presenters\v1\StorePresenter;
 use App\Repositories\CompanyRepo;
 use App\Repositories\StoreRepo;
@@ -63,13 +64,26 @@ class StoreService extends BaseService
 
     public function info($id)
     {
-        $store = Store::with('contacts', 'media')->find($id);
+        $store = Store::with('contacts', 'media', 'user')->find($id);
 
         if (is_null($store)) {
             return $this->errNotFound(__('store.not_found'));
         }
 
         return $this->result(['store' => (new StorePresenter($store))->detail()]);
+    }
+
+    public function ratings($id)
+    {
+        $store = Store::find($id);
+
+        if (is_null($store)) {
+            return $this->errNotFound(__('store.not_found'));
+        }
+
+        $ratings = $store->ratings()->with(['media', 'user'])->latest()->get();
+
+        return $this->resultCollections($ratings, RatingPresenter::class, 'list');
     }
 
     public function uploadPriceList(array $data)
@@ -166,7 +180,7 @@ class StoreService extends BaseService
         return $this->ok();
     }
 
-    public function rateStore(int $storeId, float $rate)
+    public function rateStore(int $storeId, array $data)
     {
         $store = Store::find($storeId);
         if (is_null($store)) {
@@ -187,10 +201,20 @@ class StoreService extends BaseService
             return $this->error(409, __('store.already_rated'));
         }
 
-        $store->ratings()->create([
+        $rating = $store->ratings()->create([
             'user_id' => $user->id,
-            'rate' => $rate,
+            'rate' => $data['rate'],
+            'comment' => $data['comment'] ?? null,
         ]);
+
+        if (isset($data['images'])) {
+            foreach ($data['images'] as $image) {
+                $path = $image->store('public/rating');
+                $rating->media()->create([
+                    'storage_link' => Storage::url($path),
+                ]);
+            }
+        }
 
         event(new StoreRatedEvent($store));
 

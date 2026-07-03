@@ -24,4 +24,9 @@ class Rating extends Model
     {
         return $this->morphMany(MediaFiles::class, 'mediable');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

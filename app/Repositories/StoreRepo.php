@@ -24,7 +24,7 @@ class StoreRepo
 
     public function index(array $params)
     {
-        $query = Store::with(['type', 'city', 'contacts', 'media']);
+        $query = Store::with(['type', 'city', 'contacts', 'media', 'user']);
         $query = $this->applyFilter($query, $params);
         $query = $this->applyPagination($query, $params);
         $query = $this->applyOrderBy($query, $params);

@@ -140,7 +140,7 @@ class OrderService extends BaseService
 
     public function info($id)
     {
-        $order = Order::with('media', 'category', 'executor')->find($id);
+        $order = Order::with('media', 'category', 'executor.user')->find($id);
         if (is_null($order)) {
             return $this->errNotFound(__('order.not_found'));
         }

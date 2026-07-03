@@ -28,7 +28,10 @@ class ExecutorPresenter extends BasePresenter
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'rating' => $this->rating
+            'rating' => $this->rating,
+            'photo_url' => ($this->user && $this->user->photo_url)
+                ? url($this->user->photo_url)
+                : null,
         ];
     }
 }
