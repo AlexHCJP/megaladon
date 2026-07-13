@@ -25,7 +25,7 @@ class SendMessageRequest extends FormRequest
     {
         return [
             'message' => ['required_without:file', 'string'],
-            'file' => ['required_without:message', 'file'],
+            'file' => ['required_without:message', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:10240'],
             'chat_id' => ['required', 'string', 'exists:chats,id'],
         ];
     }
