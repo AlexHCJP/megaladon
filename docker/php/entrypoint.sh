@@ -10,7 +10,15 @@ set -e
 # имя класса вида ComposerAutoloaderInit<32 hex> — длина не меняется, поэтому
 # rsync считает файлы одинаковыми и оставляет половину вендора от прошлой сборки.
 # Итог — «Class ComposerAutoloaderInit... not found» на любом artisan.
-rm -rf /var/www/vendor
+#
+# Удаляем только если в образе есть чем заменить: иначе снос рабочего вендора
+# оставит том пустым и artisan будет падать на require autoload.php.
+if [ -f /app/vendor/autoload.php ]; then
+  rm -rf /var/www/vendor
+else
+  echo "entrypoint: в образе нет /app/vendor/autoload.php — composer install не отработал при сборке" >&2
+  echo "entrypoint: оставляю /var/www/vendor как есть, приложение может не запуститься" >&2
+fi
 
 rsync -a --delete \
   --exclude '/storage' \
@@ -41,5 +49,13 @@ if [ -d /app/storage/app/firebase ]; then
 fi
 
 chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache 2>/dev/null || true
+
+# Без автозагрузчика не работает ни php-fpm, ни artisan. Падаем здесь с внятным
+# текстом, а не PHP-фаталом «Failed opening required vendor/autoload.php»
+# посреди миграций в логе деплоя.
+if [ ! -f /var/www/vendor/autoload.php ]; then
+  echo "entrypoint: /var/www/vendor/autoload.php отсутствует после синхронизации — образ собран без зависимостей" >&2
+  exit 1
+fi
 
 exec "$@"
