@@ -1,18 +1,25 @@
 #!/bin/sh
 set -e
 
+# Маркер готовности: по нему healthcheck в docker-compose.yml понимает, что
+# синхронизация кода завершена. Лежит в /tmp контейнера, а не в томе, поэтому
+# при каждом старте гарантированно отсутствует и не «залипает» с прошлого раза.
+#
+# Без него `docker compose up --wait` объявляет контейнер готовым сразу после
+# запуска процесса, деплой идёт делать `exec artisan migrate`, а rsync ниже в
+# этот момент ещё копирует вендор — artisan падает на require autoload.php
+# или vendor/composer/autoload_real.php, в зависимости от того, куда успел
+# дойти обход каталогов.
+READY_MARKER=/tmp/app-ready
+rm -f "$READY_MARKER"
+
 # Код «запечён» в образ по пути /app. При старте копируем его в общий
 # volume /var/www (его же монтирует nginx), сохраняя смонтированные с хоста
 # storage и .env.
 #
-# Вендор сносим перед синхронизацией: rsync сверяет файлы по размеру и mtime,
-# а composer при каждой установке пишет в autoload.php и composer/autoload_real.php
-# имя класса вида ComposerAutoloaderInit<32 hex> — длина не меняется, поэтому
-# rsync считает файлы одинаковыми и оставляет половину вендора от прошлой сборки.
-# Итог — «Class ComposerAutoloaderInit... not found» на любом artisan.
-#
-# Удаляем только если в образе есть чем заменить: иначе снос рабочего вендора
-# оставит том пустым и artisan будет падать на require autoload.php.
+# Вендор сносим перед синхронизацией, чтобы в томе не оставалось файлов от
+# прошлой сборки. Удаляем только если в образе есть чем заменить: иначе снос
+# рабочего вендора оставит том пустым.
 if [ -f /app/vendor/autoload.php ]; then
   rm -rf /var/www/vendor
 else
@@ -52,10 +59,14 @@ chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache 2>/dev/null
 
 # Без автозагрузчика не работает ни php-fpm, ни artisan. Падаем здесь с внятным
 # текстом, а не PHP-фаталом «Failed opening required vendor/autoload.php»
-# посреди миграций в логе деплоя.
-if [ ! -f /var/www/vendor/autoload.php ]; then
-  echo "entrypoint: /var/www/vendor/autoload.php отсутствует после синхронизации — образ собран без зависимостей" >&2
+# посреди миграций в логе деплоя. Проверяем и autoload_real.php: именно он
+# копируется последним и его отсутствие означает оборванную синхронизацию.
+if [ ! -f /var/www/vendor/autoload.php ] || [ ! -f /var/www/vendor/composer/autoload_real.php ]; then
+  echo "entrypoint: вендор в /var/www неполон после синхронизации" >&2
   exit 1
 fi
+
+# Всё скопировано — только теперь контейнер можно считать готовым.
+touch "$READY_MARKER"
 
 exec "$@"
