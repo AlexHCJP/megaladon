@@ -4,6 +4,14 @@ set -e
 # Код «запечён» в образ по пути /app. При старте копируем его в общий
 # volume /var/www (его же монтирует nginx), сохраняя смонтированные с хоста
 # storage и .env.
+#
+# Вендор сносим перед синхронизацией: rsync сверяет файлы по размеру и mtime,
+# а composer при каждой установке пишет в autoload.php и composer/autoload_real.php
+# имя класса вида ComposerAutoloaderInit<32 hex> — длина не меняется, поэтому
+# rsync считает файлы одинаковыми и оставляет половину вендора от прошлой сборки.
+# Итог — «Class ComposerAutoloaderInit... not found» на любом artisan.
+rm -rf /var/www/vendor
+
 rsync -a --delete \
   --exclude '/storage' \
   --exclude '/.env' \
