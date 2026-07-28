@@ -43,6 +43,8 @@ Route::group(['guard' => 'api'], function () {
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/confirm-code', [AuthController::class, 'confirmCode']);
+        Route::post('/resend-code', [AuthController::class, 'resendCode']);
+        Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('/reset-password', [AuthController::class, 'resetPassword']);
         Route::post('/pusher-login', [AuthController::class, 'pusherLogin'])->middleware('api');
         
@@ -56,6 +58,7 @@ Route::group(['guard' => 'api'], function () {
 
     Route::group(['prefix' => 'user', 'middleware' => 'api'], function () {
         Route::post('/change-password', [UserController::class,'changePassword']);
+        Route::delete('/delete-account', [UserController::class, 'deleteAccount']);
         Route::put('/store', [StoreController::class, 'updateProfile']);
         Route::put('/executor', [ExecutorController::class, 'update']);
         Route::post('/update-photo', [UserController::class, 'updatePhoto']);
@@ -68,6 +71,15 @@ Route::group(['guard' => 'api'], function () {
         Route::get('/profile', [UserController::class, 'currentProfile']);
         Route::get('/{id}', [UserController::class, 'profile']);
     });
+
+    // Публичная карточка пользователя. Существующий GET /user/{id} остаётся
+    // авторизованным: он отдаёт вложенные executor и store и используется
+    // в executor_repository.dart и user_repository.dart.
+    Route::get('/user/{id}/public', [UserController::class, 'publicProfile']);
+
+    // Отзывы пользователя. Публичный: экран отклика доступен без
+    // авторизации, как и карточка профиля выше.
+    Route::get('/user/{id}/ratings', [UserController::class, 'ratings']);
 
     Route::group(['prefix' => 'invoice', 'middleware' => 'api'], function () {
         Route::post('/executor/create', [InvoiceController::class, 'executorCreate']);
@@ -86,7 +98,6 @@ Route::group(['guard' => 'api'], function () {
             Route::delete('/{id}/delete', [OrderController::class, 'delete']);
             Route::post('/{id}/complete', [OrderController::class, 'complete']);
             Route::post('/{id}/rate', [OrderController::class, 'rate']);
-            Route::post('/{id}/chat/create', [OrderController::class, 'createChat']);
             Route::post('/{id}/offer', [OrderOfferController::class, 'create']);
             Route::get('/{id}/offer', [OrderOfferController::class, 'orderOffers']);
             Route::get('/{id}/offer/{offerId}', [OrderOfferController::class, 'info']);
@@ -104,7 +115,6 @@ Route::group(['guard' => 'api'], function () {
             Route::post('/', [AdvertController::class, 'create']);
             Route::post('/{id}/update', [AdvertController::class, 'update']);
             Route::delete('/{id}/delete', [AdvertController::class, 'delete']);
-            Route::post('/{id}/chat/create', [AdvertController::class, 'createChat']);
         });
     });
 
@@ -128,6 +138,7 @@ Route::group(['guard' => 'api'], function () {
 
     Route::group(['prefix' => 'chat', 'middleware' => 'api'], function () {
         Route::get('/', [ChatController::class, 'getChats']);
+        Route::post('/create', [ChatController::class, 'createChat']);
         Route::post('/send-message', [ChatController::class, 'sendMessage']);
         Route::get('/{id}', [ChatController::class, 'getMessages']);
         Route::put('/edit-message/{id}', [ChatController::class, 'editMessage']);

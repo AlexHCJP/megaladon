@@ -11,14 +11,10 @@ class Chat extends Model
 
     protected $fillable = [];
 
-    public function chatable()
-    {
-        return $this->morphTo('chatable');
-    }
-
+    // withTrashed: собеседник остаётся в чате после удаления своего аккаунта.
     public function members()
     {
-        return $this->belongsToMany(User::class, 'chat_users', 'chat_id', 'user_id');
+        return $this->belongsToMany(User::class, 'chat_users', 'chat_id', 'user_id')->withTrashed();
     }
 
     public function lastMessage()

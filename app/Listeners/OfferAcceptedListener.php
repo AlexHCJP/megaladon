@@ -2,37 +2,28 @@
 
 namespace App\Listeners;
 
+use App\Events\OfferAcceptedEvent;
 use App\Models\User;
-use App\Services\v1\PushNotificationService;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
+use App\Services\v1\PushService;
 
 class OfferAcceptedListener
 {
-    /**
-     * Create the event listener.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function __construct(private PushService $push)
     {
-        //
     }
 
-    /**
-     * Handle the event.
-     *
-     * @param  object  $event
-     * @return void
-     */
-    public function handle($event)
+    public function handle(OfferAcceptedEvent $event): void
     {
         $user = User::find($event->user_id);
-        (new PushNotificationService())->sendNotification($user->device_token,
-            'Заказ №'. $event->order_id,
+        if (!$user) {
+            return;
+        }
+
+        $this->push->send(
+            $user,
+            'Заказ №' . $event->order_id,
             'Ваше предложение принято!',
-            [
-                'order_id' => $event->order_id,
-            ]);
+            ['order_id' => $event->order_id],
+        );
     }
 }

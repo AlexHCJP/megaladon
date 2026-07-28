@@ -12,4 +12,5 @@ return [
     'new_password_sms'    => 'Your new password: :password',
     'sms_send_failed'     => 'Failed to send the SMS code',
     'password_sms_sent'   => 'An SMS with the password has been sent to the specified number',
+    'password_reset_success' => 'Password has been reset successfully. Please log in with your new password.',
 ];

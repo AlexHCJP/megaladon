@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\Chat\CreateOrderChatRequest;
 use App\Http\Requests\Order\{
     CommentOrderRequest,
     CreateOrderRequest,
@@ -70,11 +69,5 @@ class OrderController extends ApiController
     {
         $data = $request->validated();
         return $this->result($this->orderService->rateExecutor($id, $data));
-    }
-
-    public function createChat($id, CreateOrderChatRequest $request)
-    {
-        $data = $request->validated();
-        return $this->result($this->orderService->createChat($id, $data));
     }
 }

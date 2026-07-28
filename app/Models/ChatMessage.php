@@ -11,8 +11,9 @@ class ChatMessage extends Model
 
     protected $fillable = ['chat_id', 'user_id', 'message', 'file_url'];
 
+    // withTrashed: автор сообщения остаётся в истории после удаления аккаунта.
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')->withTrashed();
     }
 }

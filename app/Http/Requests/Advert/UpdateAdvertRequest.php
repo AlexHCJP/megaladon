@@ -28,7 +28,8 @@ class UpdateAdvertRequest extends FormRequest
             'title' => ['nullable', 'string', 'max:255'],
             'type' => ['nullable', 'string', 'in:advert,service'],
             'description' => ['nullable', 'string'],
-            'price' => ['nullable', 'numeric'],
+            // Границы совпадают с decimal(15,2) в БД, см. CreateAdvertRequest.
+            'price' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
             'category_id' => ['nullable', 'integer', 'exists:ad_categories,id'],
             'city_id' => ['nullable', 'integer', 'exists:cities,id'],
             'additional_phone' => ['nullable', 'string', 'starts_with:+'],

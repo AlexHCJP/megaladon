@@ -2,11 +2,11 @@
 
 namespace App\Services\v1;
 
-use App\Events\ChatCreatedEvent;
 use App\Events\ExecutorRatedEvent;
 use App\Events\OfferAcceptedEvent;
 use App\Events\OfferCreatedEvent;
 use App\Http\Requests\Order\CommentOrderRequest;
+use App\Models\Chat;
 use App\Models\Executor;
 use App\Models\Order;
 use App\Models\OrderOffer;
@@ -110,6 +110,9 @@ class OrderService extends BaseService
         if ($user) {
             $params['exclude_user_id'] = $user->id;
         }
+
+        // Заказчик удалил аккаунт — заказ уходит из общей выдачи (и для гостя тоже).
+        $params['exclude_deleted_users'] = true;
 
         $orders = $this->orderRepo->index($params);
 
@@ -271,7 +274,16 @@ class OrderService extends BaseService
             return $this->error(406, __('order.cannot_accept_foreign_offer'));
         }
 
+        // Отклик остаётся видимым после удаления аккаунта автора, но назначить
+        // такого исполнителя нельзя — заказ получил бы «мёртвого» исполнителя.
+        if (is_null($offer->user) || $offer->user->trashed()) {
+            return $this->error(406, __('order.offer_author_deleted'));
+        }
+
         $executor = Executor::where('user_id', $offer->user_id)->first();
+        if (is_null($executor)) {
+            return $this->errNotFound(__('order.executor_not_found'));
+        }
 
         $this->orderRepo->update($order, [
             'status' => Order::STATUS_HAS_EXECUTOR,
@@ -324,36 +336,6 @@ class OrderService extends BaseService
         }
 
         event(new ExecutorRatedEvent($executor));
-
-        return $this->ok();
-    }
-
-    public function createChat(int $orderId, array $data)
-    {
-        $order = Order::find($orderId);
-        if (is_null($order)) {
-            return $this->errNotFound(__('order.not_found'));
-        }
-
-        $user = $this->apiAuthUser();
-        if (is_null($user)) {
-            return $this->errFobidden(__('order.auth_error'));
-        }
-
-        $executor = Executor::find($data['executor_id']);
-        if (is_null($executor)) {
-            return $this->errNotFound(__('order.executor_not_found'));
-        }
-
-        $orderOffer = OrderOffer::where('order_id', $order->id)->where('user_id', $executor->user_id)->first();
-        if (is_null($orderOffer)) {
-            return $this->errNotAcceptable(__('order.offer_not_sent_to_you'));
-        }
-
-        $chat = $order->chatable()->create([]);
-        $chat->members()->attach([$user->id => ['chat_id' => $chat->id], $executor->user_id => ['chat_id' => $chat->id]]);
-
-        event(new ChatCreatedEvent($executor->user_id, $chat));
 
         return $this->ok();
     }

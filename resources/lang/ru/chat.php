@@ -6,4 +6,6 @@ return [
     'cannot_edit_foreign_message' => 'Вы не можете редактировать чужие сообщения',
     'message_updated'            => 'Сообщение изменено',
     'message_deleted'            => 'Сообщение удалено',
+    'cannot_chat_with_self'      => 'Нельзя написать самому себе',
+    'companion_not_found'        => 'Собеседник не найден',
 ];

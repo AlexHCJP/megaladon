@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\Chat\CreateChatRequest;
 use App\Http\Requests\Chat\EditMessageRequest;
 use App\Http\Requests\Chat\SendMessageRequest;
 use App\Http\Requests\Chat\IndexMessagesRequest;
@@ -15,6 +16,15 @@ class ChatController extends ApiController
 
     public function __construct() {
         $this->chatService = new ChatService();
+    }
+
+    public function createChat(CreateChatRequest $request)
+    {
+        $data = $request->validated();
+        return $this->result($this->chatService->createChat(
+            auth('api')->user(),
+            (int) $data['user_id']
+        ));
     }
 
     public function getChats(IndexMessagesRequest $request)

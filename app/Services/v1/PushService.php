@@ -5,6 +5,7 @@ namespace App\Services\v1;
 use App\Models\User;
 use App\Notifications\FcmPushNotification;
 use App\Services\BaseService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Слой отправки push-уведомлений. Триггеры (новый отклик, сообщение в чате,
@@ -23,7 +24,16 @@ class PushService extends BaseService
             return;
         }
 
-        $user->notify(new FcmPushNotification($title, $body, $data));
+        // Пуш — побочный эффект: его сбой (нет Firebase-конфигурации, невалидный
+        // токен устройства, недоступность FCM) не должен ронять основной запрос.
+        try {
+            $user->notify(new FcmPushNotification($title, $body, $data));
+        } catch (\Throwable $e) {
+            Log::warning('Push notification failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

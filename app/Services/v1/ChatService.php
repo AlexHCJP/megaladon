@@ -2,6 +2,7 @@
 
 namespace App\Services\v1;
 
+use App\Events\ChatCreatedEvent;
 use App\Events\NewMessageEvent;
 use App\Models\Chat;
 use App\Models\ChatMessage;
@@ -88,6 +89,30 @@ class ChatService extends BaseService
         $this->chatRepo->deleteMessage($message_id);
 
         return $this->ok(__('chat.message_deleted'));
+    }
+
+    public function createChat(User $author, int $companionId)
+    {
+        if ($author->id === $companionId) {
+            return $this->errNotAcceptable(__('chat.cannot_chat_with_self'));
+        }
+
+        $companion = User::find($companionId);
+        if (is_null($companion)) {
+            return $this->errNotFound(__('chat.companion_not_found'));
+        }
+
+        $chat = $this->chatRepo->findByMembers($author->id, $companionId);
+
+        if (is_null($chat)) {
+            $chat = $this->chatRepo->createChat();
+            $this->attachMembersToChat($chat, [$author->id, $companionId]);
+            event(new ChatCreatedEvent($companionId, $chat));
+        }
+
+        return $this->result([
+            'chat' => (new ChatPresenter($chat))->chatList($author->id),
+        ]);
     }
 
     private function attachMembersToChat(Chat $chat, array $userIds)

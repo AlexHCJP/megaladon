@@ -2,36 +2,22 @@
 
 namespace App\Listeners;
 
-use App\Services\v1\PushNotificationService;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
+use App\Events\OfferCreatedEvent;
+use App\Services\v1\PushService;
 
 class OfferCreatedListener
 {
-    /**
-     * Create the event listener.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function __construct(private PushService $push)
     {
-        //
     }
 
-    /**
-     * Handle the event.
-     *
-     * @param  object  $event
-     * @return void
-     */
-    public function handle($event)
+    public function handle(OfferCreatedEvent $event): void
     {
-        $user = $event->order->user;
-        (new PushNotificationService())->sendNotification($user->device_token,
-            'Новое предложение на заказ №'. $event->order->id,
+        $this->push->send(
+            $event->order->user,
+            'Новое предложение на заказ №' . $event->order->id,
             'Кто-то откликнулся на ваш заказ',
-            [
-                'order_id' => $event->order->id
-            ]);
+            ['order_id' => $event->order->id],
+        );
     }
 }

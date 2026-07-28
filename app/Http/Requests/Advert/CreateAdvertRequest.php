@@ -28,7 +28,9 @@ class CreateAdvertRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'type' => ['nullable', 'string', 'in:advert,service'],
             'description' => ['nullable', 'string'],
-            'price' => ['nullable', 'numeric'],
+            // Границы совпадают с decimal(15,2) в БД: без них перебор уходил
+            // в SQL и возвращался как 500 вместо понятной ошибки валидации.
+            'price' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
             'category_id' => ['required', 'integer', 'exists:ad_categories,id'],
             'city_id' => ['required', 'integer', 'exists:cities,id'],
             'additional_phone' => ['nullable', 'string', 'starts_with:+'],

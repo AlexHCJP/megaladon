@@ -55,6 +55,15 @@ class OrderRepo
             $query->where('user_id', '!=', $params['exclude_user_id']);
         }
 
+        // Заказы удалённых аккаунтов прячем из общего списка: откликаться на них
+        // всё равно нельзя, а заказчик отдаётся как «Удалённый аккаунт».
+        // Order::user() объявлен с withTrashed(), поэтому whereHas сам их не
+        // отсечёт — условие по deleted_at ставим явно. В «моих» списках фильтр
+        // не применяется: там заказ должен остаться виден.
+        if (!empty($params['exclude_deleted_users'])) {
+            $query->whereHas('user', fn ($q) => $q->whereNull('users.deleted_at'));
+        }
+
         if (isset($params['executor_id'])) {
             $query->where('executor_id', $params['executor_id']);
         }

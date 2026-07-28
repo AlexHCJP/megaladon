@@ -33,7 +33,9 @@ class IndexOrderRequest extends FormRequest
             'sortBy' => ['nullable', 'string'],
             'desc' => ['nullable', 'boolean'],
             'startRow' => ['nullable', 'integer'],
-            'rowsPerPage' => ['nullable', 'integer']
+            'rowsPerPage' => ['nullable', 'integer'],
+            // Для публичной страницы пользователя, см. IndexAdvertsRequest.
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 }

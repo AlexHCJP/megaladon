@@ -24,9 +24,27 @@ COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 # в общий volume /var/www (его монтирует и nginx).
 WORKDIR /app
 COPY . /app
-RUN composer install --no-interaction --no-plugins --no-scripts --prefer-dist \
-    --optimize-autoloader \
-    && mkdir -p \
+# Composer качает дистрибутивы параллельно, и на нестабильном канале zip'ы
+# приезжают обрезанными («is not a zip archive»). Поэтому: ограничиваем
+# параллелизм, кэшируем загрузки между сборками (cache mount), повторяем
+# попытку, а на третьей уходим в --prefer-source (git вместо zip).
+ENV COMPOSER_HOME=/tmp/composer \
+    COMPOSER_MAX_PARALLEL_HTTP=4 \
+    COMPOSER_PROCESS_TIMEOUT=900
+
+RUN --mount=type=cache,target=/tmp/composer \
+    set -eu; \
+    args="--no-interaction --no-plugins --no-scripts --optimize-autoloader"; \
+    for attempt in 1 2 3; do \
+        if [ "$attempt" = 3 ]; then mode=--prefer-source; else mode=--prefer-dist; fi; \
+        echo ">>> composer install: попытка $attempt ($mode)"; \
+        if composer install $args $mode; then ok=yes; break; fi; \
+        composer clear-cache || true; \
+        sleep 5; \
+    done; \
+    [ "${ok:-no}" = yes ]
+
+RUN mkdir -p \
         storage/framework/cache/data \
         storage/framework/sessions \
         storage/framework/views \

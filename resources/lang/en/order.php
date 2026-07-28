@@ -15,6 +15,7 @@ return [
     'must_be_in_progress'         => 'To complete the order it must have the status "In progress"',
     'offer_not_found'             => 'Offer not found',
     'cannot_accept_foreign_offer' => 'You cannot accept an offer for another user\'s order',
+    'offer_author_deleted'        => 'The offer author has deleted their account, the offer cannot be accepted',
     'cannot_rate_foreign'         => 'You cannot rate the executor of another user\'s order',
     'cannot_rate_yet'             => 'You cannot rate the executor yet',
     'offer_not_sent_to_you'       => 'The executor did not send you an offer for this order',

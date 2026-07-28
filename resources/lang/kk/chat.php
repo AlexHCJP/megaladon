@@ -6,4 +6,6 @@ return [
     'cannot_edit_foreign_message' => 'Сіз бөгде хабарламаларды өңдей алмайсыз',
     'message_updated'            => 'Хабарлама өзгертілді',
     'message_deleted'            => 'Хабарлама жойылды',
+    'cannot_chat_with_self'      => 'Өзіңізге хабарлама жаза алмайсыз',
+    'companion_not_found'        => 'Әңгімелесуші табылмады',
 ];

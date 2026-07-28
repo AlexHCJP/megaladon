@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
@@ -25,7 +26,14 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'min:2', 'max:255'],
-            'phone' => ['required', 'string', 'starts_with:+', 'unique:users,phone'],
+            'phone' => [
+                'required',
+                'string',
+                'starts_with:+',
+                // Уникальность только среди активных: soft-deleted (deleted_at)
+                // не блокируют повторную регистрацию на тот же номер.
+                Rule::unique('users', 'phone')->whereNull('deleted_at'),
+            ],
             'password' => ['required', 'string', 'min:8', 'max:32', 'confirmed'],
             'city_id' => ['required', 'exists:cities,id'],
         ];

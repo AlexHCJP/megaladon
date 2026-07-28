@@ -6,6 +6,7 @@ use App\Http\Controllers\ApiController;
 use App\Http\Requests\User\ChangePasswordRequest;
 use App\Http\Requests\User\ChangePhoneRequest;
 use App\Http\Requests\User\ChangePushStatusRequest;
+use App\Http\Requests\User\DeleteAccountRequest;
 use App\Http\Requests\User\EndChangePhoneRequest;
 use App\Http\Requests\User\GetProfileRequest;
 use App\Http\Requests\User\UpdateProfileRequest;
@@ -42,6 +43,18 @@ class UserController extends ApiController
         return $this->result($response);
     }
 
+    public function publicProfile(int $id)
+    {
+        $response = $this->userService->publicProfile($id);
+        return $this->result($response);
+    }
+
+    public function ratings(int $id)
+    {
+        $response = $this->userService->ratings($id);
+        return $this->result($response);
+    }
+
     public function currentProfile(GetProfileRequest $request)
     {
         $response = $this->userService->currentProfile($this->authUser());
@@ -59,6 +72,11 @@ class UserController extends ApiController
     {
         $data = $request->validated();
         return $this->result($this->userService->changePassword($this->authUser(), $data));
+    }
+
+    public function deleteAccount(DeleteAccountRequest $request)
+    {
+        return $this->result($this->userService->deleteAccount($this->authUser(), $request->validated()));
     }
 
     public function endChangePhone(EndChangePhoneRequest $request)

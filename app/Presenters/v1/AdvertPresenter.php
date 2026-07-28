@@ -45,7 +45,7 @@ class AdvertPresenter extends BasePresenter
                 'name' => $this->city->name,
             ] : null,
             'media'            => $this->presentCollections($this->media, MediaFilePresenter::class, 'list'),
-            'user'             => (new UserPresenter($this->user))->shortAdvert(),
+            'user'             => $this->user ? (new UserPresenter($this->user))->shortAdvert() : null,
             'created_at'       => $this->created_at,
         ];
     }

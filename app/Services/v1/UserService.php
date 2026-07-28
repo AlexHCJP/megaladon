@@ -3,7 +3,9 @@
 namespace App\Services\v1;
 
 use App\Models\User;
+use App\Presenters\v1\RatingPresenter;
 use App\Presenters\v1\UserPresenter;
+use App\Repositories\ExecutorRepo;
 use App\Repositories\PhoneConfirmationRepo;
 use App\Repositories\UserRepo;
 use App\Services\BaseService;
@@ -46,6 +48,44 @@ class UserService extends BaseService
         return $this->result(['user' => (new UserPresenter($user))->profile()]);
     }
 
+    public function publicProfile(int $userId)
+    {
+        // User::find() идёт через глобальный scope SoftDeletes, поэтому
+        // удалённый аккаунт не находится и сам отдаётся как 404 —
+        // отдельная проверка trashed() не нужна.
+        $user = User::find($userId);
+        if (is_null($user)) {
+            return $this->errNotFound(__('user.not_found'));
+        }
+
+        return $this->result(['user' => (new UserPresenter($user))->publicProfile()]);
+    }
+
+    /**
+     * Отзывы пользователя для публичных экранов. Rating привязан
+     * полиморфно к Executor, а не к User, поэтому сначала резолвим
+     * профиль исполнителя. Ключуем по user_id: на экране отклика
+     * известен именно он (OfferPresenter отдаёт UserPresenter->short()).
+     */
+    public function ratings(int $userId)
+    {
+        $user = User::find($userId);
+        if (is_null($user)) {
+            return $this->errNotFound(__('user.not_found'));
+        }
+
+        $executor = (new ExecutorRepo())->findByUserId($user->id);
+        // Профиля исполнителя нет — это не ошибка: у человека просто
+        // не может быть отзывов, отдаём пустой список.
+        if (is_null($executor)) {
+            return $this->resultCollections([], RatingPresenter::class, 'list');
+        }
+
+        $ratings = $executor->ratings()->with(['media', 'user'])->latest()->get();
+
+        return $this->resultCollections($ratings, RatingPresenter::class, 'list');
+    }
+
     public function startChangePhone($data)
     {
         $user = $this->apiAuthUser();
@@ -66,6 +106,18 @@ class UserService extends BaseService
         $this->userRepo->update($user->id, ['password' => Hash::make($data['password'])]);
 
         return $this->ok(__('user.password_changed'));
+    }
+
+    public function deleteAccount(User $user, array $data)
+    {
+        if (!Hash::check($data['password'], $user->password)) {
+            return $this->error(401, __('user.wrong_password'));
+        }
+
+        $user->tokens()->delete();
+        $user->delete();
+
+        return $this->ok(__('user.account_deleted'));
     }
 
     public function endChangePhone($data)

@@ -18,6 +18,20 @@ mkdir -p \
   /var/www/storage/logs \
   /var/www/storage/app/public
 
+# Ключ сервис-аккаунта Firebase (FIREBASE_CREDENTIALS) лежит под storage/,
+# который исключён из rsync выше, поэтому в том сам по себе не попадает —
+# без него FCM падает с "Invalid service account: file does not exist".
+# Копируем из образа только если в томе ключа ещё нет: положенный вручную
+# (например, боевой) файл не перезатираем.
+if [ -d /app/storage/app/firebase ]; then
+  mkdir -p /var/www/storage/app/firebase
+  for src in /app/storage/app/firebase/*.json; do
+    [ -e "$src" ] || continue
+    dst="/var/www/storage/app/firebase/$(basename "$src")"
+    [ -e "$dst" ] || cp "$src" "$dst"
+  done
+fi
+
 chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache 2>/dev/null || true
 
 exec "$@"

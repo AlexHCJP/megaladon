@@ -13,6 +13,15 @@ class ChatRepo
         return Chat::create([]);
     }
 
+    public function findByMembers(int $userId, int $companionId): ?Chat
+    {
+        return Chat::whereHas('members', fn ($q) => $q->whereKey($userId))
+            ->whereHas('members', fn ($q) => $q->whereKey($companionId))
+            ->has('members', '=', 2)
+            ->oldest('id')
+            ->first();
+    }
+
     public function getChatIdsByUserId(int $userId)
     {
         return ChatUser::where('user_id', $userId)
@@ -22,8 +31,19 @@ class ChatRepo
 
     public function index(array $chatIds)
     {
-        return Chat::with('chatable')
+        // Свежие переписки сверху: сортируем по времени последнего сообщения.
+        // COALESCE — чтобы только что созданный чат, в котором ещё ничего не
+        // написали, не улетал в самый низ (MAX по пустой выборке даёт NULL),
+        // а вставал по времени своего создания.
+        return Chat::with('members')
             ->whereIn('id', $chatIds)
+            ->select('chats.*')
+            ->selectSub(
+                ChatMessage::selectRaw('MAX(created_at)')
+                    ->whereColumn('chat_id', 'chats.id'),
+                'last_message_at'
+            )
+            ->orderByRaw('COALESCE(last_message_at, chats.created_at) DESC')
             ->get();
     }
 

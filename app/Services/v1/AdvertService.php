@@ -2,7 +2,6 @@
 
 namespace App\Services\v1;
 
-use App\Events\ChatCreatedEvent;
 use App\Models\Advert;
 use App\Presenters\v1\AdvertPresenter;
 use App\Repositories\AdvertRepo;
@@ -113,25 +112,5 @@ class AdvertService extends BaseService
         $advert->delete();
 
         return $this->ok(__('advert.deleted'));
-    }
-
-    public function createChat(int $advertId)
-    {
-        $advert = Advert::find($advertId);
-        if (is_null($advert)) {
-            return $this->errNotFound(__('advert.not_found'));
-        }
-
-        $user = $this->apiAuthUser();
-        if (is_null($user)) {
-            return $this->errFobidden(__('advert.auth_error'));
-        }
-
-        $chat = $advert->chatable()->create([]);
-        $chat->members()->attach([$user->id => ['chat_id' => $chat->id], $advert->user_id => ['chat_id' => $chat->id]]);
-
-        event(new ChatCreatedEvent($advert->user_id, $chat));
-
-        return $this->ok();
     }
 }

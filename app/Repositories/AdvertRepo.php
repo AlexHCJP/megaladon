@@ -75,6 +75,15 @@ class AdvertRepo
             $query->where('user_id', $params['user_id']);
         }
 
+        // Объявления и услуги удалённых аккаунтов убираем с торговой площадки:
+        // связаться с автором всё равно нельзя. Условие по deleted_at явное —
+        // Advert::user() сейчас без withTrashed(), и глобальный скоуп сработал
+        // бы сам, но добавь кто-нибудь withTrashed() (как в Order::user()) —
+        // фильтр молча перестал бы отсекать удалённых.
+        if (!empty($params['exclude_deleted_users'])) {
+            $query->whereHas('user', fn ($q) => $q->whereNull('users.deleted_at'));
+        }
+
         return $query;
     }
 

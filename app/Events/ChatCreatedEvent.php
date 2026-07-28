@@ -38,7 +38,7 @@ class ChatCreatedEvent
     public function broadcastWith()
     {
         return [
-            'chat' => (new ChatPresenter($this->chat->load('lastMessage', 'chatable')))->chatList(),
+            'chat' => (new ChatPresenter($this->chat))->chatList($this->user_id),
         ];
     }
 }

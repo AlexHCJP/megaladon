@@ -20,9 +20,11 @@ class OrderOffer extends Model
         'expired_at',
     ];
 
+    // withTrashed: отклик остаётся видимым, даже если автор удалил аккаунт —
+    // он отдаётся как «Удалённый аккаунт» (см. UserPresenter).
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')->withTrashed();
     }
 
     public function city()

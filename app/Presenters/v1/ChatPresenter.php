@@ -6,12 +6,21 @@ use App\Presenters\BasePresenter;
 
 class ChatPresenter extends BasePresenter
 {
-    public function chatList()
+    public function chatList(?int $viewerId = null)
     {
         $lastMessage = $this->lastMessage();
+        // Собеседник — участник чата, отличный от смотрящего. Вне HTTP-запроса
+        // (например, при вещании события) viewerId передаётся явно, иначе
+        // берётся из авторизации.
+        $viewerId ??= auth('api')->id();
+        $companion = $viewerId
+            ? $this->members->firstWhere('id', '!=', $viewerId)
+            : null;
         return [
             'id' => $this->id,
-            'title' => $this->chatable->title,
+            'companion' => $companion
+                ? (new UserPresenter($companion))->short()
+                : null,
             'lastMessage' => is_null($lastMessage) ? [] : [
                 'id' => $lastMessage->id,
                 'user_id' => $lastMessage->user_id,

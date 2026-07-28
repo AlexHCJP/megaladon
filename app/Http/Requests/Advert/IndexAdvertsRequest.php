@@ -32,7 +32,11 @@ class IndexAdvertsRequest extends FormRequest
             'city_id' => ['nullable', 'integer'],
             'type' => ['nullable', 'in:service,advert'],
             'startRow' => ['nullable', 'integer'],
-            'rowsPerPage' => ['nullable', 'integer']
+            'rowsPerPage' => ['nullable', 'integer'],
+            // Для публичной страницы пользователя. Обработка user_id
+            // в AdvertRepo::applyFilterQuery уже есть — не хватало только
+            // прохода через validated().
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 }

@@ -4,6 +4,8 @@ return [
     'not_found'                    => 'User not found',
     'wrong_password'               => 'Incorrect password entered',
     'password_changed'             => 'Password changed successfully',
+    'account_deleted'              => 'Account has been deleted',
+    'deleted_account_name'         => 'Deleted account',
     'confirmation_code_not_found'  => 'Confirmation code not found, please try again a little later',
     'wrong_confirmation_code'      => 'Incorrect confirmation code entered',
     'phone_changed'                => 'Phone number changed',

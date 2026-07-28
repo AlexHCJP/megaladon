@@ -23,11 +23,6 @@ class Order extends Model
         return $this->morphMany(MediaFiles::class, 'mediable');
     }
 
-    public function chatable()
-    {
-        return $this->morphOne(Chat::class, 'chatable');
-    }
-
     public function comments()
     {
         return $this->hasMany(Comment::class, 'order_id');
@@ -38,9 +33,11 @@ class Order extends Model
         return $this->hasMany(OrderOffer::class, 'order_id');
     }
 
+    // withTrashed: заказ остаётся видимым исполнителю, даже если заказчик
+    // удалил аккаунт — он отдаётся как «Удалённый аккаунт» (см. UserPresenter).
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')->withTrashed();
     }
 
     public function executor()

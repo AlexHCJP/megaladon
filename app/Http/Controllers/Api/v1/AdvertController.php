@@ -7,7 +7,6 @@ use App\Http\Requests\Advert\CreateAdvertRequest;
 use App\Http\Requests\Advert\IndexAdvertsRequest;
 use App\Http\Requests\Advert\IndexMyAdvertsRequest;
 use App\Http\Requests\Advert\UpdateAdvertRequest;
-use App\Http\Requests\Chat\CreateChatRequest;
 use App\Services\v1\AdvertService;
 use Illuminate\Http\Request;
 
@@ -23,6 +22,10 @@ class AdvertController extends ApiController
     public function index(IndexAdvertsRequest $request)
     {
         $params = $request->validated();
+        // Флаг ставим здесь, а не в AdvertService::index: тот же метод сервиса
+        // обслуживает и /adverts/my, где свои объявления скрывать не нужно.
+        $params['exclude_deleted_users'] = true;
+
         return $this->result($this->advertService->index($params));
     }
 
@@ -52,10 +55,5 @@ class AdvertController extends ApiController
     public function delete($id)
     {
         return $this->result($this->advertService->delete($id));
-    }
-
-    public function createChat($id, CreateChatRequest $request)
-    {
-        return $this->result($this->advertService->createChat($id));
     }
 }

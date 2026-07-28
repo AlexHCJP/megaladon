@@ -6,4 +6,6 @@ return [
     'cannot_edit_foreign_message' => 'You cannot edit other users\' messages',
     'message_updated'            => 'Message updated',
     'message_deleted'            => 'Message deleted',
+    'cannot_chat_with_self'      => 'You cannot message yourself',
+    'companion_not_found'        => 'Companion not found',
 ];

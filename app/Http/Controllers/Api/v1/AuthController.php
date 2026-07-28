@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Auth\ConfirmCodeRequest;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResendCodeRequest;
 use App\Http\Requests\Auth\SendCodeRequest;
 use App\Http\Requests\Auth\ExecutorRegisterRequest;
 use App\Http\Requests\Auth\PusherLoginRequest;
@@ -59,6 +61,16 @@ class AuthController extends ApiController
         $user = $this->authUser();
         $code = (new PhoneConfirmationService())->sendCode($user, $user->phone);
         return $this->result(['verification_code' => $code]);
+    }
+
+    public function forgotPassword(ForgotPasswordRequest $request)
+    {
+        return $this->result($this->authService->forgotPassword($request->validated()));
+    }
+
+    public function resendCode(ResendCodeRequest $request)
+    {
+        return $this->result($this->authService->resendCode($request->validated()));
     }
 
     public function resetPassword(ResetPasswordRequest $request)

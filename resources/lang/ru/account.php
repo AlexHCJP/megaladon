@@ -12,4 +12,5 @@ return [
     'new_password_sms'    => 'Ваш новый пароль: :password',
     'sms_send_failed'     => 'Не удалось отправить смс код',
     'password_sms_sent'   => 'Смс с паролем было выслано на указанный номер',
+    'password_reset_success' => 'Пароль успешно изменён. Войдите с новым паролем.',
 ];

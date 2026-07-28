@@ -21,10 +21,22 @@ class PhoneConfirmationRepo
         return PhoneConfirmation::where('phone', $phone)->first();
     }
 
+    public function getLatestByPhone($phone)
+    {
+        return PhoneConfirmation::where('phone', $phone)
+            ->latest('id')
+            ->first();
+    }
+
     public function getByUserIdAndPhone(int $userId, $phone)
     {
         return PhoneConfirmation::where('user_id', $userId)
             ->where('phone', $phone)
             ->first();
+    }
+
+    public function deleteByPhone($phone)
+    {
+        return PhoneConfirmation::where('phone', $phone)->delete();
     }
 }

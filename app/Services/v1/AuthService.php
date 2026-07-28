@@ -142,43 +142,54 @@ class AuthService extends BaseService
         ]);
     }
 
-    public function resetPassword(array $data)
+    public function forgotPassword(array $data)
     {
         $user = $this->userRepo->getUserByPhone($data['phone']);
         if (is_null($user)) {
             return $this->errNotFound(__('account.user_not_found'));
         }
 
-        $newPassword = Str::random(10);
-        
-        if ($this->smsConfig['no_send_sms'] == false) {
-            $url = 'https://smsc.kz/sys/send.php'; // $this->smsConfig['url']
-            $params = [
-                'login' => $this->smsConfig['login'],
-                'psw' => $this->smsConfig['password'],
-                'phones' => substr($user->phone, 1, 11),
-                'mes' => __('account.new_password_sms', ['password' => $newPassword]),
-                'sender' => 'Manover',
-                'translit' => 0,
-                'time' => 0,
-                'fmt' => 3,
-            ];
-    
-            $client = new Client();
-            $response = $client->request('POST', $url, [
-                'form_params' => $params
-            ]);
-    
-            $jsonResponse = json_decode($response->getBody()->getContents(), true);
-            Log::info($jsonResponse);
-            if (isset($jsonResponse['error'])) {
-                return $this->errService(__('account.sms_send_failed'));
-            }
+        $code = (new PhoneConfirmationService())->sendCode($user, $data['phone']);
+
+        return $this->result([
+            'verification_code' => $code,
+        ]);
+    }
+
+    public function resendCode(array $data)
+    {
+        $user = $this->userRepo->getUserByPhone($data['phone']);
+        if (is_null($user)) {
+            return $this->errNotFound(__('account.user_not_found'));
         }
 
-        $this->userRepo->update($user->id, ['password' => Hash::make($newPassword)]);
+        $code = (new PhoneConfirmationService())->sendCode($user, $data['phone']);
 
-        return $this->ok(__('account.password_sms_sent'));
+        return $this->result([
+            'verification_code' => $code,
+        ]);
+    }
+
+    public function resetPassword(array $data)
+    {
+        $confirmation = (new PhoneConfirmationRepo())->getLatestByPhone($data['phone']);
+        if (is_null($confirmation)) {
+            return $this->errNotFound(__('account.phone_invalid'));
+        }
+
+        if ($confirmation->code != $data['code']) {
+            return $this->error(400, __('account.code_invalid'));
+        }
+
+        $user = $this->userRepo->getUserByPhone($data['phone']);
+        if (is_null($user)) {
+            return $this->errNotFound(__('account.user_not_found'));
+        }
+
+        $this->userRepo->update($user->id, ['password' => Hash::make($data['password'])]);
+        (new PhoneConfirmationRepo())->deleteByPhone($data['phone']);
+
+        return $this->ok(__('account.password_reset_success'));
     }
 
     public function logout()
