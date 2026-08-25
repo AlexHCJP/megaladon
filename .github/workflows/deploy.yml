@@ -94,6 +94,20 @@ jobs:
             docker compose pull
             docker compose up -d --no-build --remove-orphans --wait
 
+            # default.conf смонтирован в контейнер файлом, а тег образа nginx
+            # фиксированный — если поменялся только конфиг, compose разницы в
+            # сервисе не видит и контейнер не пересоздаёт. Правки так и не
+            # применились бы. Перечитываем конфиг явно, но лишь после проверки:
+            # reload с битым конфигом оставит nginx на старом, а restart —
+            # уронит его совсем.
+            echo "==> Применяем конфиг nginx"
+            if docker compose exec -T nginx nginx -t; then
+              docker compose exec -T nginx nginx -s reload
+            else
+              echo "Конфиг nginx не прошёл проверку — оставляю работать старый" >&2
+              exit 1
+            fi
+
             echo "==> Гарантируем наличие БД перед миграциями"
             docker compose exec -T db sh -lc 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"'
 
