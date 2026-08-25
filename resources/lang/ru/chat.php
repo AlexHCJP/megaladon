@@ -8,4 +8,5 @@ return [
     'message_deleted'            => 'Сообщение удалено',
     'cannot_chat_with_self'      => 'Нельзя написать самому себе',
     'companion_not_found'        => 'Собеседник не найден',
+    'not_a_member'               => 'Вы не участник этого чата',
 ];

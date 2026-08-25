@@ -81,6 +81,13 @@ jobs:
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login \
               -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
+            # Внешняя сеть, через которую Caddy (стек manover-edge) отдаёт
+            # сюда трафик api.manovermetal.kz. Создаём идемпотентно: без неё
+            # compose не поднимется вовсе.
+            echo "==> Проверяем сеть manover_edge"
+            docker network inspect manover_edge >/dev/null 2>&1 \
+              || docker network create manover_edge
+
             export APP_IMAGE="alexhcjp/megaladon_back:${{ github.sha }}"
 
             echo "==> Тянем образ и поднимаем контейнеры (ждём healthcheck БД)"

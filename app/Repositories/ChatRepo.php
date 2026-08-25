@@ -29,14 +29,23 @@ class ChatRepo
             ->toArray();
     }
 
-    public function index(array $chatIds)
+    public function index(array $chatIds, int $viewerId)
     {
         // Свежие переписки сверху: сортируем по времени последнего сообщения.
         // COALESCE — чтобы только что созданный чат, в котором ещё ничего не
         // написали, не улетал в самый низ (MAX по пустой выборке даёт NULL),
         // а вставал по времени своего создания.
         return Chat::with('members')
+            // Счётчик для бейджа: чужие сообщения, которые смотрящий ещё не
+            // открывал. Свои в непрочитанные не попадают никогда.
+            ->withCount(['messages as unread_count' => function ($query) use ($viewerId) {
+                $query->where('user_id', '!=', $viewerId)
+                    ->where('is_readed', false);
+            }])
             ->whereIn('id', $chatIds)
+            // Чат без единого сообщения в списке не показываем: его создали,
+            // но переписка так и не началась.
+            ->has('messages')
             ->select('chats.*')
             ->selectSub(
                 ChatMessage::selectRaw('MAX(created_at)')
@@ -45,6 +54,16 @@ class ChatRepo
             )
             ->orderByRaw('COALESCE(last_message_at, chats.created_at) DESC')
             ->get();
+    }
+
+    // Помечает прочитанными чужие сообщения чата. Массовый update идёт мимо
+    // модели, поэтому is_readed не нужен в $fillable.
+    public function markChatRead(int $chatId, int $viewerId): int
+    {
+        return ChatMessage::where('chat_id', $chatId)
+            ->where('user_id', '!=', $viewerId)
+            ->where('is_readed', false)
+            ->update(['is_readed' => true]);
     }
 
     public function indexMessages(int $chatId, array $params)

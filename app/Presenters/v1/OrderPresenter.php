@@ -8,17 +8,38 @@ class OrderPresenter extends BasePresenter
 {
     public function list()
     {
+        // countOffers() — это отдельный COUNT, поэтому считаем один раз и
+        // переиспользуем и для выдачи, и для новых откликов.
+        $countOffers = $this->countOffers();
+        $view = $this->seenState();
+
         return [
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
-            'count_offers' => $this->countOffers(),
+            'count_offers' => $countOffers,
             'city' => (new CityPresenter($this->city))->list(),
             'created_at' => date('d.m.Y', strtotime($this->created_at)),
             'status' => $this->getStatusName(),
             'status_code' => $this->status,
             'execution_days' => $this->execution_days,
+            'status_changed' => !is_null($view) && (int) $view->seen_status !== (int) $this->status,
+            'new_offers_count' => is_null($view)
+                ? 0
+                : max(0, $countOffers - (int) $view->seen_offers_count),
         ];
+    }
+
+    // Отметка «просмотрено» смотрящего, если её подгрузили (OrderRepo::index
+    // с viewer_id). null — либо список без бейджей, либо заказ, который
+    // пользователь ещё ни разу не видел: в обоих случаях нового нет.
+    private function seenState()
+    {
+        if (!$this->model->relationLoaded('views')) {
+            return null;
+        }
+
+        return $this->model->views->first();
     }
 
     public function detail()

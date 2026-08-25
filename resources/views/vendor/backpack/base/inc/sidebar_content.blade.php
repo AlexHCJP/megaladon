@@ -7,6 +7,7 @@
 <li class="nav-item"><a class="nav-link" href="{{ backpack_url('executor') }}"><i class="nav-icon la la-user-alt"></i> Исполнители</a></li>
 <li class="nav-item"><a class="nav-link" href="{{ backpack_url('store') }}"><i class="nav-icon la la-address-card"></i> Металлопрокат</a></li>
 <li class="nav-item"><a class="nav-link" href="{{ backpack_url('service-type') }}"><i class="nav-icon la la-bookmark"></i> Виды услуг</a></li>
+<li class="nav-item"><a class="nav-link" href="{{ backpack_url('rating') }}"><i class="nav-icon la la-star"></i> Отзывы</a></li>
 <hr>
 <li class="nav-item"><a class="nav-link" href="{{ backpack_url('city') }}"><i class="nav-icon la la-city"></i> Города</a></li>
 <hr>

@@ -66,7 +66,9 @@ class StoreService extends BaseService
     {
         $store = Store::with('contacts', 'media', 'user')->find($id);
 
-        if (is_null($store)) {
+        // Магазин без активной подписки скрыт: отдаём тот же 404, что и для
+        // несуществующего, чтобы не раскрывать факт просроченной подписки.
+        if (is_null($store) || is_null($store->activeInvoice())) {
             return $this->errNotFound(__('store.not_found'));
         }
 
@@ -77,7 +79,7 @@ class StoreService extends BaseService
     {
         $store = Store::find($id);
 
-        if (is_null($store)) {
+        if (is_null($store) || is_null($store->activeInvoice())) {
             return $this->errNotFound(__('store.not_found'));
         }
 
@@ -183,7 +185,7 @@ class StoreService extends BaseService
     public function rateStore(int $storeId, array $data)
     {
         $store = Store::find($storeId);
-        if (is_null($store)) {
+        if (is_null($store) || is_null($store->activeInvoice())) {
             return $this->errNotFound(__('store.not_found'));
         }
 
@@ -224,13 +226,20 @@ class StoreService extends BaseService
     public function updateRating(Store $store) : void
     {
         $ratings = $store->ratings()->get();
-        
+        $countRates = $ratings->count();
+
+        // Отзывов может не остаться — например, админ удалил последний.
+        // Без этой ветки деление ниже роняет запрос DivisionByZeroError.
+        if ($countRates === 0) {
+            $this->storeRepo->update($store->id, ['rating' => 0]);
+
+            return;
+        }
+
         $sumRating = 0;
         foreach ($ratings as $rating) {
             $sumRating += $rating->rate;
         }
-
-        $countRates = $store->ratings()->count();
 
         $this->storeRepo->update($store->id, ['rating' => round($sumRating / $countRates, 1)]);
     }

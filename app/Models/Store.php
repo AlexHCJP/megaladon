@@ -67,6 +67,16 @@ class Store extends Model
             ->first();
     }
 
+    // Магазин без активной подписки не показывается в приложении:
+    // ни в каталоге металлопроката, ни карточкой по прямой ссылке.
+    public function scopeHasActiveSubscription($query)
+    {
+        return $query->whereHas('invoices', function ($q) {
+            $q->where('status', Invoice::STATUS_PAID)
+                ->whereDate('expired_at', '>', Carbon::now());
+        });
+    }
+
     public function getContacts()
     {
         $contacts = $this->contacts()->get();

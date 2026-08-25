@@ -10,9 +10,14 @@ class TrustProxies extends Middleware
     /**
      * The trusted proxies for this application.
      *
+     * Приложение всегда стоит за Caddy из соседнего docker-стека, и его
+     * адрес в docker-сети не фиксирован. Без доверия к прокси Laravel не
+     * читает X-Forwarded-Proto и генерирует http-ссылки (в том числе на
+     * файлы в storage) на https-домене api.manovermetal.kz.
+     *
      * @var array|string|null
      */
-    protected $proxies;
+    protected $proxies = '*';
 
     /**
      * The headers that should be used to detect proxies.

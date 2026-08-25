@@ -42,6 +42,10 @@ class StoreRepo
 
     private function applyFilter($query, $params)
     {
+        // Магазины без активной подписки в каталог не попадают.
+        // Фильтр общий для index() и count(), чтобы счётчик и пагинация сходились.
+        $query->hasActiveSubscription();
+
         if (isset($params['name'])) {
             $query->where('name', $params['name']);
         }

@@ -29,6 +29,14 @@ class ChatPresenter extends BasePresenter
                 'is_readed' => (boolean) $lastMessage->is_readed,
                 'created_at' => $lastMessage->created_at,
             ],
+            // Счётчик приходит из ChatRepo::index(). Тот же презентер зовётся
+            // из createChat() и NewMessageEvent, где withCount не делался —
+            // там непрочитанных по определению нет.
+            //
+            // Через $this->model, а не $this->unread_count: у BasePresenter
+            // есть __get, но нет __isset, поэтому ?? на магическом свойстве
+            // всегда отдавал бы дефолт.
+            'unread_count' => (int) ($this->model->unread_count ?? 0),
         ];
     }
 

@@ -44,13 +44,20 @@ class ExecutorService extends BaseService
     public function updateRating(Executor $executor) : void
     {
         $ratings = $executor->ratings()->get();
-        
+        $countRates = $ratings->count();
+
+        // Отзывов может не остаться — например, админ удалил последний.
+        // Без этой ветки деление ниже роняет запрос DivisionByZeroError.
+        if ($countRates === 0) {
+            $this->executorRepo->update($executor->user_id, ['rating' => 0]);
+
+            return;
+        }
+
         $sumRating = 0;
         foreach ($ratings as $rating) {
             $sumRating += $rating->rate;
         }
-
-        $countRates = $executor->ratings()->count();
 
         $this->executorRepo->update($executor->user_id, ['rating' => round($sumRating / $countRates, 1)]);
     }

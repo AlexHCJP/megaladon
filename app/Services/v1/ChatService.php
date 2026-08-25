@@ -2,7 +2,6 @@
 
 namespace App\Services\v1;
 
-use App\Events\ChatCreatedEvent;
 use App\Events\NewMessageEvent;
 use App\Models\Chat;
 use App\Models\ChatMessage;
@@ -23,9 +22,28 @@ class ChatService extends BaseService
     public function getChats(User $user)
     {
         $chatIds = $this->chatRepo->getChatIdsByUserId($user->id);
-        $chats = $this->chatRepo->index($chatIds);
-        
+        $chats = $this->chatRepo->index($chatIds, $user->id);
+
         return $this->resultCollections($chats, ChatPresenter::class, 'chatList');
+    }
+
+    // Пользователь открыл переписку: чужие сообщения перестают быть
+    // непрочитанными, бейдж в списке и в меню гаснет.
+    public function markRead(User $user, int $chatId)
+    {
+        $chat = Chat::find($chatId);
+
+        if (is_null($chat)) {
+            return $this->errNotFound(__('chat.chat_not_found'));
+        }
+
+        if (!$chat->members()->whereKey($user->id)->exists()) {
+            return $this->errFobidden(__('chat.not_a_member'));
+        }
+
+        $this->chatRepo->markChatRead($chatId, $user->id);
+
+        return $this->ok();
     }
 
     public function chatMessages(User $user, int $chatId, array $params)
@@ -107,7 +125,9 @@ class ChatService extends BaseService
         if (is_null($chat)) {
             $chat = $this->chatRepo->createChat();
             $this->attachMembersToChat($chat, [$author->id, $companionId]);
-            event(new ChatCreatedEvent($companionId, $chat));
+            // О пустом чате собеседника не уведомляем: пока в нём нет
+            // сообщений, он всё равно скрыт из списка (ChatRepo::index).
+            // Про первое сообщение он узнает из NewMessageEvent.
         }
 
         return $this->result([

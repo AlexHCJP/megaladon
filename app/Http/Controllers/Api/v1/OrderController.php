@@ -50,6 +50,11 @@ class OrderController extends ApiController
         return $this->result($this->orderService->indexMyResponded($params));
     }
 
+    public function badges()
+    {
+        return $this->result($this->orderService->badges());
+    }
+
     public function info($id)
     {
         return $this->result($this->orderService->info($id));

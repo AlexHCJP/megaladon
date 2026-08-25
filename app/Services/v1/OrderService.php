@@ -18,15 +18,18 @@ use App\Repositories\CommentRepo;
 use App\Repositories\ExecutorRepo;
 use App\Repositories\OrderOfferRepo;
 use App\Repositories\OrderRepo;
+use App\Repositories\OrderViewRepo;
 use App\Services\BaseService;
 use Illuminate\Support\Facades\Storage;
 
 class OrderService extends BaseService
 {
     private OrderRepo $orderRepo;
+    private OrderViewRepo $orderViewRepo;
 
     public function __construct() {
         $this->orderRepo = new OrderRepo();
+        $this->orderViewRepo = new OrderViewRepo();
     }
 
     public function create(User $user, $data)
@@ -44,6 +47,11 @@ class OrderService extends BaseService
                 ]);
             }
         }
+
+        // Автор только что видел свой заказ — с этого состояния и считаем
+        // изменения. Без отметки первая же смена статуса на модерации не дала
+        // бы бейджа: правило «нет строки — нового нет».
+        $this->orderViewRepo->markSeen($user->id, $order);
 
         return $this->result([
             'order' => (new OrderPresenter($order))->detail(),
@@ -126,19 +134,48 @@ class OrderService extends BaseService
             return $this->errFobidden(__('order.auth_error'));
         }
         $params['user_id'] = $user->id;
+        $params['viewer_id'] = $user->id;
         $orders = $this->orderRepo->index($params);
         return $this->resultCollections($orders, OrderPresenter::class, 'list');
     }
 
     public function indexMyResponded(array $params)
     {
-        $executor = $this->apiAuthUser()->executor()->first();
+        $user = $this->apiAuthUser();
+        if (is_null($user)) {
+            return $this->errFobidden(__('order.auth_error'));
+        }
+
+        $executor = $user->executor()->first();
         if (is_null($executor)) {
             return $this->errNotFound(__('order.executor_not_found'));
         }
         $params['executor_id'] = $executor->id;
+        $params['viewer_id'] = $user->id;
         $orders = $this->orderRepo->index($params);
         return $this->resultCollections($orders, OrderPresenter::class, 'list');
+    }
+
+    // Счётчики для бейджей в меню и на вкладках «моих заказов». Отдельный
+    // лёгкий эндпоинт: опрашивать ради двух чисел полные списки заказов
+    // с описаниями незачем.
+    public function badges()
+    {
+        $user = $this->apiAuthUser();
+        if (is_null($user)) {
+            return $this->errFobidden(__('order.auth_error'));
+        }
+
+        $executor = $user->executor()->first();
+
+        return $this->result([
+            'badges' => [
+                'my' => $this->orderViewRepo->countMyWithUpdates($user->id),
+                'responded' => is_null($executor)
+                    ? 0
+                    : $this->orderViewRepo->countRespondedWithUpdates($user->id, $executor->id),
+            ],
+        ]);
     }
 
     public function info($id)
@@ -154,6 +191,14 @@ class OrderService extends BaseService
             $offer = OrderOffer::where('user_id', $user->id)->where('order_id', $id)->first();
             if ($offer) {
                 $isResponded = true;
+            }
+
+            // Карточку открыли — бейдж на ней гаснет. Отметку ставим только
+            // тем, кому этот заказ вообще показывается в «моих»: заказчику и
+            // назначенному исполнителю. Случайный зритель из общей ленты
+            // строк в order_views не плодит.
+            if ($order->user_id == $user->id || $this->isAssignedExecutor($order, $user)) {
+                $this->orderViewRepo->markSeen($user->id, $order);
             }
         }
 
@@ -290,9 +335,27 @@ class OrderService extends BaseService
             'executor_id' => $executor->id,
         ]);
 
+        // Заказ только что появился у исполнителя во вкладке «мои отклики».
+        // Отмечаем текущее состояние, чтобы бейдж дал следующая смена статуса,
+        // а не сам факт назначения.
+        $this->orderViewRepo->markSeen($offer->user_id, $order->fresh());
+
         event(new OfferAcceptedEvent($offer->user_id, $orderId));
 
         return $this->ok();
+    }
+
+    // Пользователь — назначенный исполнитель этого заказа (именно такие заказы
+    // отдаёт вкладка «мои отклики»).
+    private function isAssignedExecutor(Order $order, User $user): bool
+    {
+        if (empty($order->executor_id)) {
+            return false;
+        }
+
+        $executor = $user->executor()->first();
+
+        return !is_null($executor) && $executor->id == $order->executor_id;
     }
 
     public function rateExecutor(int $orderId, array $data)

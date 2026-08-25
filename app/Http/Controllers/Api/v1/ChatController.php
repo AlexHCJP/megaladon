@@ -42,6 +42,14 @@ class ChatController extends ApiController
         ));
     }
 
+    public function markRead($id)
+    {
+        return $this->result($this->chatService->markRead(
+            auth('api')->user(),
+            (int) $id
+        ));
+    }
+
     public function sendMessage(SendMessageRequest $request)
     {
         $data = $request->validated();

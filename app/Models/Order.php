@@ -33,6 +33,13 @@ class Order extends Model
         return $this->hasMany(OrderOffer::class, 'order_id');
     }
 
+    // Отметки «просмотрено» по пользователям. В выдачу подгружается только
+    // строка смотрящего — см. OrderRepo::index() и параметр viewer_id.
+    public function views()
+    {
+        return $this->hasMany(OrderView::class, 'order_id');
+    }
+
     // withTrashed: заказ остаётся видимым исполнителю, даже если заказчик
     // удалил аккаунт — он отдаётся как «Удалённый аккаунт» (см. UserPresenter).
     public function user()

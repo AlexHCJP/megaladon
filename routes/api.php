@@ -93,6 +93,7 @@ Route::group(['guard' => 'api'], function () {
         Route::group(['middleware' => 'api'], function () {
             Route::get('/my', [OrderController::class, 'indexMy']);
             Route::get('/my-responded', [OrderController::class, 'indexMyResponded']);
+            Route::get('/badges', [OrderController::class, 'badges']);
             Route::post('/create', [OrderController::class, 'store']);
             Route::post('/{id}/update', [OrderController::class, 'update']);
             Route::delete('/{id}/delete', [OrderController::class, 'delete']);
@@ -140,6 +141,7 @@ Route::group(['guard' => 'api'], function () {
         Route::get('/', [ChatController::class, 'getChats']);
         Route::post('/create', [ChatController::class, 'createChat']);
         Route::post('/send-message', [ChatController::class, 'sendMessage']);
+        Route::post('/{id}/read', [ChatController::class, 'markRead']);
         Route::get('/{id}', [ChatController::class, 'getMessages']);
         Route::put('/edit-message/{id}', [ChatController::class, 'editMessage']);
         Route::delete('/delete-message/{id}', [ChatController::class, 'deleteMessage']);

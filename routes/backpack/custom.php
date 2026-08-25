@@ -26,6 +26,7 @@ Route::group([
     Route::crud('invoice', 'InvoiceCrudController');
     Route::crud('executor', 'ExecutorCrudController');
     Route::crud('store', 'StoreCrudController');
+    Route::crud('rating', 'RatingCrudController');
     Route::crud('advert', 'AdvertCrudController');
     Route::crud('order', 'OrderCrudController');
     Route::crud('order-offer', 'OrderOfferCrudController');

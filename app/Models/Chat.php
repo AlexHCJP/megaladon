@@ -17,6 +17,11 @@ class Chat extends Model
         return $this->belongsToMany(User::class, 'chat_users', 'chat_id', 'user_id')->withTrashed();
     }
 
+    public function messages()
+    {
+        return $this->hasMany(ChatMessage::class, 'chat_id', 'id');
+    }
+
     public function lastMessage()
     {
         return $this->hasOne(ChatMessage::class, 'chat_id', 'id')->latest('created_at')->first();;

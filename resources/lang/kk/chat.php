@@ -8,4 +8,5 @@ return [
     'message_deleted'            => 'Хабарлама жойылды',
     'cannot_chat_with_self'      => 'Өзіңізге хабарлама жаза алмайсыз',
     'companion_not_found'        => 'Әңгімелесуші табылмады',
+    'not_a_member'               => 'Сіз бұл чаттың қатысушысы емессіз',
 ];

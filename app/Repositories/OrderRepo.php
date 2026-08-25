@@ -22,7 +22,16 @@ class OrderRepo
     public function index($params)
     {
         $query = Order::query();
-        $query = $this->applyFilterQuery($query, $params);           
+
+        // Отметка «просмотрено» смотрящего — из неё презентер считает бейджи.
+        // В общей ленте viewer_id не передаётся: там бейджей нет и лишний
+        // запрос ни к чему.
+        if (isset($params['viewer_id'])) {
+            $viewerId = $params['viewer_id'];
+            $query->with(['views' => fn ($q) => $q->where('user_id', $viewerId)]);
+        }
+
+        $query = $this->applyFilterQuery($query, $params);
         $query = $this->applyPaginationQuery($query, $params);
         $query = $this->applySortBy($query, $params);
         return $query->get();
