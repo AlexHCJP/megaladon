@@ -65,8 +65,10 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
       MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
       MYSQL_USER: ${DB_USERNAME:-megaladon}
+    # Только с самого сервера: снаружи база торчать не должна. Для доступа
+    # с ноутбука — SSH-туннель: ssh -L 3306:127.0.0.1:3306 <user>@<host>
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -82,8 +84,9 @@ services:
     image: redis:7-alpine
     container_name: megaladon_redis
     restart: unless-stopped
+    # Redis без пароля — наружу публиковать нельзя.
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     networks:
       - megaladon
 
